@@ -1,39 +1,38 @@
 var builder = require('botbuilder')
+var weather = require('weather-js');
 
-// Bot Storage: Here we register the state storage for your bot.
-// Default store: volatile in-memory store - Only for prototyping!
+
+
 var inMemoryStorage = new builder.MemoryBotStorage()
+
 
 // Setup bot and root waterfall
 var connector = new builder.ConsoleConnector().listen()
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        builder.Prompts.text(session, "Hello... What's your name?")
+        builder.Prompts.text(session, "What country?")
     },
     function (session, results) {
-        session.userData.name = results.response
-        builder.Prompts.number(
-            session,
-            'Hi ' + results.response + ', How many years have you been coding?'
-        )
-    },
-    function (session, results) {
-        session.userData.coding = results.response
-        builder.Prompts.choice(session, 'What language do you code Node using?', [
-            'JavaScript',
-            'CoffeeScript',
-            'TypeScript'
+        session.userData.location = results.response
+        builder.Prompts.choice(session, 'Are you interested in forecast of: ', [
+            'Today',
+            'Tomorrow',
+            'Day after tomorrow'
         ])
     },
     function (session, results) {
-        session.userData.language = results.response.entity
+        session.userData.day = results.response.entity
+        weather.find({ search: session.userData.location, degreeType: 'C' }, function (err, result) {
+            if (err) console.log(err);
+            console.log(JSON.parse(result));
+        })
         session.send(
-            'Got it... ' +
-            session.userData.name +
-            " you've been programming for " +
-            session.userData.coding +
-            ' years and use ' +
-            session.userData.language +
+            'Location: ' +
+            session.userData.weather +//.forecast[0].high +
+            //'Location2: ' +
+            //session.userData.weather["low"] +
+            ".......... Forecast for " +
+            session.userData.day +
             '.'
         )
     }
