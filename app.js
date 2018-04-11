@@ -1,5 +1,8 @@
 
 var builder = require('botbuilder')
+var weather = require('weather-js')
+
+var today = new Date();
 
 // Bot Storage: Here we register the state storage for your bot.
 // Default store: volatile in-memory store - Only for prototyping!
@@ -9,33 +12,29 @@ var inMemoryStorage = new builder.MemoryBotStorage()
 var connector = new builder.ConsoleConnector().listen()
 var bot = new builder.UniversalBot(connector, [
     function (session) {
-        builder.Prompts.text(session, "Hello... What's your name?")
+        builder.Prompts.text(session, "what city?")
     },
     function (session, results) {
-        session.userData.name = results.response
-        builder.Prompts.number(
-            session,
-            'Hi ' + results.response + ', How many years have you been coding?'
-        )
-    },
-    function (session, results) {
-        session.userData.coding = results.response
-        builder.Prompts.choice(session, 'What language do you code Node using?', [
-            'JavaScript',
-            'CoffeeScript',
-            'TypeScript'
-        ])
-    },
-    function (session, results) {
-        session.userData.language = results.response.entity
-        session.send(
-            'Got it... ' +
-            session.userData.name +
-            " you've been programming for " +
-            session.userData.coding +
-            ' years and use ' +
-            session.userData.language +
-            '.'
-        )
+        session.userData.location = results.response
+        weather.find({ search: results.response, degreeType: 'C' }, function (err, result) {
+            if (err) console.log(err);
+
+            if (typeof result[0] !== 'undefined') {
+                //successfully print weather forecast
+                console.log(JSON.stringify(result, null, 2));
+                session.send(
+                    "\n\n\n\n\nhere is today's date" +
+                    today.getDate()
+                    )
+            } else {
+                //location unrecognised
+                session.send(
+                    "Sorry, but I can't recognise '" +
+                    session.userData.location +
+                    "' as a city."
+                )
+            }
+
+        });
     }
 ]).set('storage', inMemoryStorage) // Register in memory storage
